@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { BASE_URL } from '../api';
 
 const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [scale, setScale] = useState(1);
   const [touchStart, setTouchStart] = useState(null);
 
-  const API_BASE = "http://localhost:5001";
+  const API_BASE = BASE_URL;
 
   const getFullUrl = (src) => {
     if (!src) return '';

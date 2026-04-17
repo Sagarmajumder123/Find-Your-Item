@@ -1,7 +1,9 @@
 import axios from "axios";
 
+export const BASE_URL = "https://find-your-item-oxzn.onrender.com";
+
 const API = axios.create({
-  baseURL: "https://find-your-item-oxzn.onrender.com/api",
+  baseURL: `${BASE_URL}/api`,
 });
 
 // ✅ Auto-attach JWT token to every request

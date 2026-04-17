@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { getLostItem, getFoundItem, checkChatAllowed } from "../api";
+import { getLostItem, getFoundItem, checkChatAllowed, BASE_URL } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { CATEGORIES } from "./CategorySelector";
 import { COLORS } from "./ColorSelector";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import ImageViewer from "./ImageViewer";
 
-const API_BASE = "http://localhost:5001";
+const API_BASE = BASE_URL;
 
 const getCategoryInfo = (id) => {
   const cat = CATEGORIES.find((c) => c.id === id);

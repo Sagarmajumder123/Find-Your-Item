@@ -8,11 +8,12 @@ import {
   deleteFoundItem,
   getMyMatches,
   getNotifications,
+  BASE_URL
 } from "../api";
 import { showToast } from "./Toast";
 import { CATEGORIES } from "./CategorySelector";
 
-const API_BASE = "http://localhost:5001";
+const API_BASE = BASE_URL;
 
 const getCategoryInfo = (id) => {
   const cat = CATEGORIES.find((c) => c.id === id);

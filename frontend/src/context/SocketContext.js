@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
+import { BASE_URL } from '../api';
 
 const SocketContext = createContext();
 
@@ -20,7 +21,7 @@ export const SocketProvider = ({ children }) => {
 
       try {
         const { io } = await import('socket.io-client');
-        const socket = io('https://find-your-item-oxzn.onrender.com', {
+        const socket = io(BASE_URL, {
           transports: ['websocket', 'polling'],
         });
 

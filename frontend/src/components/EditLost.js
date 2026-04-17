@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getLostItem, updateLostItem } from "../api";
+import { getLostItem, updateLostItem, BASE_URL } from "../api";
 import { showToast } from "./Toast";
 import CategorySelector from "./CategorySelector";
 import ColorSelector from "./ColorSelector";
 import LocationPicker from "./LocationPicker";
 
-const API_BASE = "http://localhost:5001";
+const API_BASE = BASE_URL;
 
 const EditLost = () => {
   const { id } = useParams();

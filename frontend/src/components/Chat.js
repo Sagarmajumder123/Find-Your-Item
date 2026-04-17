@@ -4,11 +4,11 @@ import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import {
   getConversations, getMessages, sendMessage as sendMessageAPI,
-  uploadChatFile, getUserStatus,
+  uploadChatFile, getUserStatus, BASE_URL
 } from "../api";
 import { playMessageSound, playSentSound } from "../utils/sounds";
 
-const API_BASE = "http://localhost:5001";
+const API_BASE = BASE_URL;
 
 const Chat = () => {
   const { userId: paramUserId } = useParams();

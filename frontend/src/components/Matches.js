@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getMatches } from "../api";
+import { getMatches, BASE_URL } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { CATEGORIES } from "./CategorySelector";
 
-const API_BASE = "http://localhost:5001";
+const API_BASE = BASE_URL;
 
 const getCategoryInfo = (id) => {
   const cat = CATEGORIES.find((c) => c.id === id);
