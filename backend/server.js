@@ -18,8 +18,8 @@ try {
   const { Server } = require("socket.io");
   io = new Server(server, {
   cors: {
-    origin: "https://your-frontend-name.onrender.com", // Change this to your Render frontend URL
-    methods: ["GET", "POST"],
+    origin: ["http://localhost:3000", "https://find-your-item-frontend.onrender.com"], 
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
 });
@@ -195,6 +195,12 @@ try {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use(cors({
+    origin: ["http://localhost:3000", "https://find-your-item-frontend.onrender.com"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
+
 /* =========================
    STATIC FILES (UPLOADS)
 ========================= */
@@ -290,9 +296,3 @@ const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
-app.use(cors({
-    origin: "https://find-your-item-frontend.onrender.com", // Paste your actual Render frontend URL here
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
-}));

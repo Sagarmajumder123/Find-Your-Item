@@ -64,8 +64,10 @@ const Navbar = () => {
       <nav className="navbar">
         {/* Brand */}
         <div className="navbar-brand">
-          <span className="brand-icon">🔍</span>
-          <Link to="/">Find Your Item</Link>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            <img src="/logo.png" alt="Logo" className="brand-logo-img" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+            <span>Find Your Item</span>
+          </Link>
         </div>
 
         {/* Mobile menu button */}
