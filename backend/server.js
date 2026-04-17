@@ -17,12 +17,12 @@ const onlineUsers = new Map(); // { odId: socketId }
 try {
   const { Server } = require("socket.io");
   io = new Server(server, {
-    cors: {
-      origin: "http://localhost:3000",
-      methods: ["GET", "POST"],
-      credentials: true,
-    },
-  });
+  cors: {
+    origin: "https://your-frontend-name.onrender.com", // Change this to your Render frontend URL
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
 
   const User = require("./models/User");
   const Message = require("./models/Message");
@@ -191,15 +191,6 @@ try {
   console.log("⚠️ Socket.io not installed, chat will use polling only");
 }
 
-/* =========================
-   SECURITY + MIDDLEWARE
-========================= */
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-  })
-);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -299,10 +290,6 @@ const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
-
-
-const cors = require('cors');
 
 app.use(cors({
     origin: "https://your-frontend-name.onrender.com", // Paste your actual Render frontend URL here
