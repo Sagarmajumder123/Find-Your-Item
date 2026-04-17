@@ -292,7 +292,7 @@ server.listen(PORT, () => {
 });
 
 app.use(cors({
-    origin: "https://your-frontend-name.onrender.com", // Paste your actual Render frontend URL here
+    origin: "https://find-your-item-frontend.onrender.com", // Paste your actual Render frontend URL here
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 }));
