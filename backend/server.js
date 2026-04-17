@@ -299,3 +299,13 @@ const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
+
+
+const cors = require('cors');
+
+app.use(cors({
+    origin: "https://your-frontend-name.onrender.com", // Paste your actual Render frontend URL here
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
