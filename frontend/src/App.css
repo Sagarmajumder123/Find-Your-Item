@@ -179,6 +179,7 @@ img {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
+  padding-top: calc(72px + 2rem); /* Push down by header height + original padding */
   width: 100%;
 }/* ============================================
    NAVBAR (Professional Slate & Sky)
@@ -189,19 +190,16 @@ img {
   left: 0;
   right: 0;
   height: 72px;
-  background: transparent;
-  backdrop-filter: blur(0px);
+  background: var(--bg-secondary) !important;
+  backdrop-filter: none !important;
   transition: var(--transition-base);
-  z-index: 1000;
-  border-bottom: 1px solid transparent;
+  z-index: 5000;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
 }
 
 .navbar-header.scrolled {
-  background: rgba(2, 6, 23, 0.8);
-  backdrop-filter: blur(12px);
-  height: 64px;
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  height: 72px; /* Keep height fixed */
 }
 
 .navbar-container {
@@ -233,6 +231,7 @@ img {
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.5px;
+  white-space: nowrap;
 }
 
 .navbar-links {
@@ -284,6 +283,7 @@ img {
   padding-left: 20px;
   border-left: 1px solid var(--border-color);
   flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 .theme-toggle {
@@ -1955,10 +1955,7 @@ img {
 .stats-number {
   font-size: var(--font-4xl);
   font-weight: 800;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary);
 }
 
 .stats-label {
@@ -3866,18 +3863,18 @@ img {
 }
 
 .msg-tag-sent {
-  background: rgba(255, 255, 255, 0.2);
-  color: #E2E8F0;
+  background: #38bdf8;
+  color: #ffffff;
 }
 
 .msg-tag-delivered {
-  background: rgba(167, 139, 250, 0.25);
-  color: #C4B5FD;
+  background: #818cf8;
+  color: #ffffff;
 }
 
 .msg-tag-seen {
-  background: rgba(52, 211, 153, 0.25);
-  color: #6EE7B7;
+  background: #10b981;
+  color: #ffffff;
 }
 
 /* ============================================
