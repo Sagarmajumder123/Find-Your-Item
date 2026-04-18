@@ -12,11 +12,14 @@ const path = require("path");
 const CATEGORIES = LostItem.CATEGORIES;
 const COLORS = LostItem.COLORS;
 
-// ================= GET ALL LOST ITEMS (Restricted to User) =================
+const { getItemAccessLevel } = require("../middleware/access");
+
+// ================= GET ALL LOST ITEMS (Public Gallery) =================
 router.get("/", protect, async (req, res) => {
   try {
     const { search, location, dateFrom, dateTo, category, color, status } = req.query;
-    const query = { user: req.user._id };
+    // Removed user filter to allow community view
+    const query = {}; 
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: "i" } },
@@ -49,10 +52,22 @@ router.get("/user/me", protect, async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", protect, async (req, res) => {
   try {
     const item = await LostItem.findById(req.params.id).populate("user", "name email");
     if (!item) return res.status(404).json({ message: "Item not found" });
+
+    const accessLevel = await getItemAccessLevel(req.user._id, item, 'LostItem');
+
+    // If not owner or match, strip sensitive data (Option B)
+    if (accessLevel === 'public') {
+      const publicItem = item.toObject();
+      delete publicItem.location; // Hide coordinates
+      delete publicItem.locationName; // Hide exact name
+      publicItem.isRestricted = true;
+      return res.json(publicItem);
+    }
+
     res.json(item);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -191,6 +206,8 @@ async function triggerMatching(newItem, type, io) {
         await createAndEmitNotification(io, {
           userId: foundItem.user._id,
           newItem, otherItem: foundItem, matchResult,
+          ownerId: foundItem.user._id,
+          finderId: newItem.user._id,
           message: `A lost "${newItem.title}" matches your found item! ${matchResult.distance}km away. Score: ${matchResult.score}%`,
         });
 
@@ -198,6 +215,8 @@ async function triggerMatching(newItem, type, io) {
         await createAndEmitNotification(io, {
           userId: newItem.user._id,
           newItem: foundItem, otherItem: newItem, matchResult,
+          ownerId: newItem.user._id,
+          finderId: foundItem.user._id,
           message: `A found "${foundItem.title}" matches your lost item! ${matchResult.distance}km away. Score: ${matchResult.score}%`,
         });
       }
@@ -207,7 +226,7 @@ async function triggerMatching(newItem, type, io) {
   }
 }
 
-async function createAndEmitNotification(io, { userId, newItem, otherItem, matchResult, message }) {
+async function createAndEmitNotification(io, { userId, newItem, otherItem, matchResult, message, ownerId, finderId }) {
   const lostId = otherItem.category ? otherItem._id : newItem._id;
   const foundId = newItem._id;
 
@@ -230,7 +249,9 @@ async function createAndEmitNotification(io, { userId, newItem, otherItem, match
       foundItemId: foundId.toString(),
       score: matchResult.score,
       distance: matchResult.distance,
-      label: matchResult.label
+      label: matchResult.label,
+      ownerId: ownerId.toString(),
+      finderId: finderId.toString()
     }
   });
 

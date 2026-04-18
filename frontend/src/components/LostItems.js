@@ -52,9 +52,9 @@ const LostItems = () => {
     <div className="page-container">
       <div className="section-header">
         <div className="animate-fade">
-          <h1 className="section-title">📦 My Lost Items</h1>
+          <h1 className="section-title">📦 Lost Items Gallery</h1>
           <p className="section-subtitle">
-            {items.length} item{items.length !== 1 ? "s" : ""} reported lost
+            Community reported lost items
           </p>
         </div>
         <Link to="/add-lost" className="btn btn-primary">
@@ -137,8 +137,8 @@ const LostItems = () => {
                   </div>
                   <h3 className="card-title">{item.title}</h3>
                   <div className="card-meta">
-                    <span>📍 {item.locationName || "Location set"}</span>
                     <span>📅 {new Date(item.date).toLocaleDateString()}</span>
+                    <span>{catInfo.label}</span>
                   </div>
                   <p className="card-description">{item.description}</p>
                   <div className="card-footer">

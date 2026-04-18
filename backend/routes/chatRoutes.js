@@ -4,6 +4,7 @@ const Message = require("../models/Message");
 const User = require("../models/User");
 const { protect } = require("../middleware/auth");
 const upload = require("../config/multer");
+const Notification = require("../models/Notification");
 
 // ================= GET CONVERSATIONS LIST =================
 // Returns list of users the current user has chatted with
@@ -134,6 +135,65 @@ router.post("/messages", protect, async (req, res) => {
     const receiver = await User.findById(receiverId);
     if (!receiver) {
       return res.status(404).json({ message: "Receiver not found" });
+    }
+
+    // Verify a match exists between them
+    const matchExists = await Notification.findOne({
+      $or: [
+        { user: req.user._id, 'data.chatUserId': receiverId.toString() },
+        { user: receiverId, 'data.chatUserId': req.user._id.toString() },
+        // Also check raw match notifications
+        { 
+          type: 'match',
+          $or: [
+            { user: req.user._id, 'data.foundItemId': { $exists: true } }, 
+            { user: receiverId, 'data.foundItemId': { $exists: true } }
+          ]
+        }
+      ]
+    });
+
+    // Simple check: do they have any type='match' notification together?
+    // A better way: check if they have a common lost/found pair match notification
+    const commonMatch = await Notification.findOne({
+      type: 'match',
+      $or: [
+        { user: req.user._id, 'data.ownerId': receiverId.toString() }, // if we stored ownerId
+        { 
+          'data.lostItemId': { $exists: true }, 
+          'data.foundItemId': { $exists: true },
+          // This is getting complex, let's use a simpler heuristic for now:
+          // A match notification exists for THIS user regarding SOME item they own vs OTHER user
+        }
+      ]
+    });
+    
+    // Let's refine the match check: 
+    // Is there a notification for req.user._id where data contains an item owned by receiverId?
+    // OR vice versa.
+    
+    // Check if there is a match notification for the current user that links to the receiver as either owner or finder
+    const validMatch = await Notification.findOne({
+      type: 'match',
+      user: req.user._id,
+      $or: [
+        { 'data.ownerId': receiverId.toString() },
+        { 'data.finderId': receiverId.toString() }
+      ]
+    });
+    
+    // Also check vice-versa just in case (e.g. if the other user initiated the match info)
+    const validMatchReverse = await Notification.findOne({
+      type: 'match',
+      user: receiverId,
+      $or: [
+        { 'data.ownerId': req.user._id.toString() },
+        { 'data.finderId': req.user._id.toString() }
+      ]
+    });
+
+    if (!validMatch && !validMatchReverse) {
+       return res.status(403).json({ message: "You must have a verified match to initiate chat" });
     }
 
     const message = new Message({

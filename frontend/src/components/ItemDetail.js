@@ -159,13 +159,16 @@ const ItemDetail = () => {
           )}
 
           <div className="detail-meta">
-            <div className="detail-meta-item"><span className="icon">📍</span><span>{item.locationName || "Location set on map"}</span></div>
+            <div className="detail-meta-item">
+              <span className="icon">📍</span>
+              <span>{item.isRestricted ? "Exact location hidden until match" : (item.locationName || "Location set on map")}</span>
+            </div>
             <div className="detail-meta-item"><span className="icon">📅</span><span>{new Date(item.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span></div>
             <div className="detail-meta-item"><span className="icon">🕐</span><span>Posted {new Date(item.createdAt).toLocaleDateString()}</span></div>
           </div>
 
           {/* Mini Map */}
-          {hasCoordinates && (
+          {hasCoordinates && !item.isRestricted && (
             <div className="detail-map" style={{ marginBottom: "1.5rem" }}>
               <h3 style={{ marginBottom: "0.75rem", color: "var(--text-primary)" }}>📍 Location on Map</h3>
               <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid var(--border-color)" }}>
@@ -177,12 +180,20 @@ const ItemDetail = () => {
             </div>
           )}
 
+          {item.isRestricted && (
+            <div className="map-locked-notice">
+              <span>🔒</span> Exact location hidden. Create a matching report to unlock.
+            </div>
+          )}
+
           {/* Posted by */}
           <div className="detail-poster">
             <div className="poster-avatar">{getInitial(item.user?.name)}</div>
             <div className="poster-info">
               <div className="poster-name">{item.user?.name || "Anonymous"}</div>
-              <div className="poster-email">{item.user?.email || ""}</div>
+              {!item.isRestricted && (
+                <div className="poster-email">{item.user?.email || ""}</div>
+              )}
             </div>
           </div>
 
