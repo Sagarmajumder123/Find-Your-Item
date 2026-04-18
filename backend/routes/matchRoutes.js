@@ -5,63 +5,79 @@ const FoundItem = require("../models/FoundItem");
 const { protect } = require("../middleware/auth");
 const { calculateMatchScore } = require("../utils/haversine");
 
-// ================= GET ALL MATCHES (using MongoDB geo queries) =================
+// ================= GET MATCHES (Restricted to current user's items) =================
 router.get("/", protect, async (req, res) => {
   try {
     const { category, maxDistance, minScore, page = 1, limit = 20 } = req.query;
-    const maxDist = parseFloat(maxDistance) || 50; // Default 50km
-    const minMatchScore = parseInt(minScore) || 0;
+    const maxDist = parseFloat(maxDistance) || 50; 
+    const minMatchScore = parseInt(minScore) || 50; 
     const skip = (parseInt(page) - 1) * parseInt(limit);
+    const userId = req.user._id;
 
-    // Get all active lost items
-    let lostQuery = { status: 'active' };
-    if (category) lostQuery.category = category;
-    const lostItems = await LostItem.find(lostQuery)
-      .populate("user", "name email")
-      .sort({ createdAt: -1 });
+    // We only find matches where the current user is either the LOST owner OR the FOUND owner
+    let userLostQuery = { user: userId, status: 'active' };
+    if (category) userLostQuery.category = category;
+    const myLostItems = await LostItem.find(userLostQuery).populate("user", "name email");
 
     const matches = [];
 
-    // For each lost item, find nearby found items with same category using $near
-    for (const lostItem of lostItems) {
+    for (const lostItem of myLostItems) {
       const foundQuery = {
         status: 'active',
         category: lostItem.category,
+        user: { $ne: userId },
         location: {
           $near: {
-            $geometry: {
-              type: 'Point',
-              coordinates: lostItem.location.coordinates
-            },
-            $maxDistance: maxDist * 1000 // Convert km to meters
+            $geometry: { type: 'Point', coordinates: lostItem.location.coordinates },
+            $maxDistance: maxDist * 1000
           }
         }
       };
 
-      const nearbyFound = await FoundItem.find(foundQuery)
-        .populate("user", "name email")
-        .limit(10); // Limit per lost item to prevent explosion
+      const nearbyFound = await FoundItem.find(foundQuery).populate("user", "name email").limit(10);
 
       for (const foundItem of nearbyFound) {
-        // Skip if both items are from the same user
-        if (lostItem.user._id.toString() === foundItem.user._id.toString()) continue;
-
         const matchResult = calculateMatchScore(lostItem, foundItem);
-
         if (matchResult.score >= minMatchScore) {
-          matches.push({
-            lostItem,
-            foundItem,
-            ...matchResult
-          });
+          matches.push({ lostItem, foundItem, ...matchResult });
         }
       }
     }
 
-    // Sort by score descending
-    matches.sort((a, b) => b.score - a.score);
+    let userFoundQuery = { user: userId, status: 'active' };
+    if (category) userFoundQuery.category = category;
+    const myFoundItems = await FoundItem.find(userFoundQuery).populate("user", "name email");
 
-    // Paginate
+    for (const foundItem of myFoundItems) {
+      const lostQuery = {
+        status: 'active',
+        category: foundItem.category,
+        user: { $ne: userId },
+        location: {
+          $near: {
+            $geometry: { type: 'Point', coordinates: foundItem.location.coordinates },
+            $maxDistance: maxDist * 1000
+          }
+        }
+      };
+
+      const nearbyLost = await LostItem.find(lostQuery).populate("user", "name email").limit(10);
+
+      for (const lostItem of nearbyLost) {
+        const exists = matches.find(m => 
+          m.lostItem._id.toString() === lostItem._id.toString() && 
+          m.foundItem._id.toString() === foundItem._id.toString()
+        );
+        if (exists) continue;
+
+        const matchResult = calculateMatchScore(lostItem, foundItem);
+        if (matchResult.score >= minMatchScore) {
+          matches.push({ lostItem, foundItem, ...matchResult });
+        }
+      }
+    }
+
+    matches.sort((a, b) => b.score - a.score);
     const total = matches.length;
     const paginatedMatches = matches.slice(skip, skip + parseInt(limit));
 

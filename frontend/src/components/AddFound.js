@@ -5,6 +5,7 @@ import { showToast } from "./Toast";
 import CategorySelector from "./CategorySelector";
 import ColorSelector from "./ColorSelector";
 import LocationPicker from "./LocationPicker";
+import { containsFace } from "../utils/imageValidation";
 
 const AddFound = () => {
   const navigate = useNavigate();
@@ -43,7 +44,6 @@ const AddFound = () => {
       streamRef.current = stream;
       
       setIsCameraOpen(true);
-      // Wait for React to render the video element
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -54,7 +54,7 @@ const AddFound = () => {
     } catch (err) {
       console.error("Camera access error:", err);
       setCameraError("Camera access denied or not available. Please allow camera permissions in your browser or device settings.");
-      setIsCameraOpen(true); // Open modal anyway to show error
+      setIsCameraOpen(true);
     }
   };
 
@@ -66,18 +66,25 @@ const AddFound = () => {
     setIsCameraOpen(false);
   };
 
-  const handleCapture = () => {
+  const handleCapture = async () => {
     if (!videoRef.current) return;
     
     const video = videoRef.current;
     const canvas = canvasRef.current;
     
-    // Set canvas dimensions to match video stream
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
     const ctx = canvas.getContext("2d");
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // AI SCANNING BEFORE SAVING
+    showToast("🧠 Scanning photo for humans...", "info");
+    const hasFace = await containsFace(canvas); // face-api can take canvas directly
+    if (hasFace) {
+      showToast("❌ Strictly No Human Images allowed! Please capture only the item.", "error");
+      return;
+    }
     
     canvas.toBlob((blob) => {
       if (!blob) {
@@ -87,8 +94,6 @@ const AddFound = () => {
       
       const file = new File([blob], `live-capture-${Date.now()}.jpg`, { type: "image/jpeg" });
       
-      // Because we captured this via getUserMedia explicitly, we bypass EXIF check 
-      // and permanently tag this internal capture as 100% verified original.
       const verification = {
         badge: 'verified',
         confidence: 100,
@@ -100,16 +105,14 @@ const AddFound = () => {
       setImages(prev => [...prev, file]);
       setPreview(prev => [...prev, URL.createObjectURL(file)]);
       
-      // The getBadge method expects a specific format matching getVerificationBadge output.
-      // We simulate it directly here.
       setImageVerifications(prev => [...prev, {
-        raw: verification, // Just marker
+        raw: verification, 
         getBadgeData: () => verification
       }]);
 
       showToast("Photo captured successfully!", "success");
       stopCamera();
-    }, "image/jpeg", 0.85); // 85% quality JPG
+    }, "image/jpeg", 0.85);
   };
 
   const handleChange = (e) => {

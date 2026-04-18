@@ -11,18 +11,13 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [unread, setUnread] = useState(0);
-  const [theme, setTheme] = useState(
-    localStorage.getItem("theme") || "dark"
-  );
 
-  // Scroll shadow
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Fetch unread count
   useEffect(() => {
     if (user) {
       const fetchUnread = async () => {
@@ -37,16 +32,6 @@ const Navbar = () => {
     }
   }, [user]);
 
-  // Theme toggle
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
-
   const handleLogout = () => {
     logout();
     setMenuOpen(false);
@@ -55,147 +40,52 @@ const Navbar = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  const getInitial = (name) => {
-    return name ? name.charAt(0).toUpperCase() : "U";
-  };
+  const getInitial = (name) => name ? name.charAt(0).toUpperCase() : "U";
 
   return (
-    <header className={`header ${scrolled ? "scrolled" : ""}`}>
-      <nav className="navbar">
+    <header className={`navbar-header ${scrolled ? "scrolled" : ""}`}>
+      <div className="navbar-container">
         {/* Brand */}
-        <div className="navbar-brand">
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-            <img src="/logo.png" alt="Logo" className="brand-logo-img" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
-            <span>Find Your Item</span>
-          </Link>
-        </div>
+        <Link to="/" className="navbar-brand">
+          <img src="/logo.png" alt="FindYourItem" className="brand-logo" />
+          <span className="brand-text">FindYourItem</span>
+        </Link>
 
-        {/* Mobile menu button */}
-        <button
-          className="mobile-menu-btn"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-        >
-          {menuOpen ? "✕" : "☰"}
-        </button>
-
-        {/* Nav links */}
-        <ul className={`navbar-nav ${menuOpen ? "open" : ""}`}>
-          <li>
-            <Link
-              to="/"
-              className={`nav-link ${isActive("/") ? "active" : ""}`}
-              onClick={() => setMenuOpen(false)}
-            >
-              🏠 Home
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/lost"
-              className={`nav-link ${isActive("/lost") ? "active" : ""}`}
-              onClick={() => setMenuOpen(false)}
-            >
-              📦 Lost
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/found"
-              className={`nav-link ${isActive("/found") ? "active" : ""}`}
-              onClick={() => setMenuOpen(false)}
-            >
-              🔎 Found
-            </Link>
-          </li>
-
+        {/* Desktop Nav */}
+        <nav className={`navbar-links ${menuOpen ? "mobile-open" : ""}`}>
+          <Link to="/" className={`nav-item ${isActive("/") ? "active" : ""}`} onClick={() => setMenuOpen(false)}>Home</Link>
+          <Link to="/lost" className={`nav-item ${isActive("/lost") ? "active" : ""}`} onClick={() => setMenuOpen(false)}>Lost</Link>
+          <Link to="/found" className={`nav-item ${isActive("/found") ? "active" : ""}`} onClick={() => setMenuOpen(false)}>Found</Link>
+          
           {user ? (
             <>
-              <li>
-                <Link
-                  to="/matches"
-                  className={`nav-link ${isActive("/matches") ? "active" : ""}`}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  🔗 Matches
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/chat"
-                  className={`nav-link ${isActive("/chat") ? "active" : ""}`}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  💬 Chat
-                  {unread > 0 && <span className="badge">{unread}</span>}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/dashboard"
-                  className={`nav-link ${isActive("/dashboard") ? "active" : ""}`}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  📊 Dashboard
-                </Link>
-              </li>
-              <li>
-                <div className="nav-user-badge">
-                  <div className="user-avatar">{getInitial(user.name)}</div>
-                  {user.name}
-                </div>
-              </li>
-              <li>
-                <button
-                  onClick={handleLogout}
-                  className="nav-link nav-logout-btn"
-                >
-                  🚪 Logout
-                </button>
-              </li>
+              <Link to="/matches" className={`nav-item ${isActive("/matches") ? "active" : ""}`} onClick={() => setMenuOpen(false)}>Matches</Link>
+              <Link to="/chat" className={`nav-item ${isActive("/chat") ? "active" : ""}`} onClick={() => setMenuOpen(false)}>
+                Chat {unread > 0 && <span className="nav-unread">{unread}</span>}
+              </Link>
+              <Link to="/dashboard" className={`nav-item ${isActive("/dashboard") ? "active" : ""}`} onClick={() => setMenuOpen(false)}>Dashboard</Link>
+              
+              <div className="nav-profile">
+                <NotificationBell />
+                <div className="user-avatar" title={user.name}>{getInitial(user.name)}</div>
+                <button onClick={handleLogout} className="btn-logout" title="Logout">🚪</button>
+              </div>
             </>
           ) : (
-            <>
-              <li>
-                <Link
-                  to="/login"
-                  className={`nav-link ${isActive("/login") ? "active" : ""}`}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  🔐 Login
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/register"
-                  className="btn btn-primary btn-sm"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Get Started
-                </Link>
-              </li>
-            </>
+            <div className="nav-auth-btns">
+              <Link to="/login" className="nav-item" onClick={() => setMenuOpen(false)}>Login</Link>
+              <Link to="/register" className="btn btn-primary btn-sm" onClick={() => setMenuOpen(false)}>Register</Link>
+            </div>
           )}
+        </nav>
 
-          {/* Notification Bell (only for logged-in users) */}
-          {user && (
-            <li className="nav-notification-li">
-              <NotificationBell />
-            </li>
-          )}
-
-          {/* Theme toggle */}
-          <li>
-            <button
-              className="theme-toggle"
-              onClick={toggleTheme}
-              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            >
-              {theme === "dark" ? "☀️" : "🌙"}
-            </button>
-          </li>
-        </ul>
-      </nav>
+        {/* Mobile Toggle */}
+        <button className="navbar-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+          <div className={`hamburger ${menuOpen ? "active" : ""}`}>
+            <span></span><span></span><span></span>
+          </div>
+        </button>
+      </div>
     </header>
   );
 };

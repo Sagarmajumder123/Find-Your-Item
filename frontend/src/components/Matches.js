@@ -88,17 +88,8 @@ const Matches = () => {
       );
     }
 
-    // If user is neither (browsing other matches), show both only to valid targets
-    if (currentUserId !== lostOwnerId && currentUserId !== foundOwnerId) {
-      buttons.push(
-        <Link key="finder" to={`/chat/${foundOwnerId}`} className="btn btn-primary btn-sm" style={{ flex: 1 }}>
-          💬 Contact Finder
-        </Link>,
-        <Link key="owner" to={`/chat/${lostOwnerId}`} className="btn btn-secondary btn-sm" style={{ flex: 1 }}>
-          💬 Contact Owner
-        </Link>
-      );
-    }
+    // Note: Users can no longer browse other users' matches due to privacy updates.
+    // The list is now strictly filtered to own items.
 
     if (buttons.length === 0) {
       buttons.push(

@@ -5,6 +5,7 @@ import { showToast } from "./Toast";
 import CategorySelector from "./CategorySelector";
 import ColorSelector from "./ColorSelector";
 import LocationPicker from "./LocationPicker";
+import { containsFace } from "../utils/imageValidation";
 
 const AddLost = () => {
   const navigate = useNavigate();
@@ -30,6 +31,17 @@ const AddLost = () => {
     setLocationData({ lat, lng, locationName: name || "" });
   };
 
+  // Helper for face validation
+  const validateImage = async (file) => {
+    showToast("🔍 Scanning photo for humans...", "info");
+    const hasFace = await containsFace(file);
+    if (hasFace) {
+      showToast("❌ Strictly No Human Images allowed! Please upload product/item photos only.", "error");
+      return false;
+    }
+    return true;
+  };
+
   const handleImage = async (e) => {
     const files = Array.from(e.target.files);
     const remaining = 10 - images.length;
@@ -39,8 +51,11 @@ const AddLost = () => {
     const newImages = [], newPreviews = [];
 
     for (const file of toAdd) {
-      newImages.push(file);
-      newPreviews.push(URL.createObjectURL(file));
+      const isValid = await validateImage(file);
+      if (isValid) {
+        newImages.push(file);
+        newPreviews.push(URL.createObjectURL(file));
+      }
     }
 
     setImages(prev => [...prev, ...newImages]);

@@ -5,6 +5,7 @@ import { showToast } from "./Toast";
 import CategorySelector from "./CategorySelector";
 import ColorSelector from "./ColorSelector";
 import LocationPicker from "./LocationPicker";
+import { containsFace } from "../utils/imageValidation";
 
 const API_BASE = BASE_URL;
 
@@ -29,6 +30,17 @@ const EditLost = () => {
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Helper for face validation
+  const validateImage = async (file) => {
+    showToast("🔍 Scanning photo for humans...", "info");
+    const hasFace = await containsFace(file);
+    if (hasFace) {
+      showToast("❌ Strictly No Human Images allowed! Please upload product/item photos only.", "error");
+      return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -82,8 +94,11 @@ const EditLost = () => {
     const newImages = [], newPreviews = [];
 
     for (const file of toAdd) {
-      newImages.push(file);
-      newPreviews.push(URL.createObjectURL(file));
+      const isValid = await validateImage(file);
+      if (isValid) {
+        newImages.push(file);
+        newPreviews.push(URL.createObjectURL(file));
+      }
     }
 
     setImages(prev => [...prev, ...newImages]);
@@ -105,9 +120,17 @@ const EditLost = () => {
     input.type = "file"; input.accept = "image/*"; input.capture = "environment";
     input.onchange = async (e) => {
       const file = e.target.files[0];
-      if (!file || (existingImages.length + images.length) >= 10) return;
-      setImages(prev => [...prev, file]);
-      setPreview(prev => [...prev, URL.createObjectURL(file)]);
+      if (!file) return;
+      if (existingImages.length + images.length >= 10) {
+        showToast("Maximum 10 images allowed", "error");
+        return;
+      }
+
+      const isValid = await validateImage(file);
+      if (isValid) {
+        setImages(prev => [...prev, file]);
+        setPreview(prev => [...prev, URL.createObjectURL(file)]);
+      }
     };
     input.click();
   };
