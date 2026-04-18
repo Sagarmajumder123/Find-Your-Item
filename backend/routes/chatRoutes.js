@@ -91,6 +91,7 @@ router.get("/messages/:userId", protect, async (req, res) => {
         { sender: currentUserId, receiver: otherUserId },
         { sender: otherUserId, receiver: currentUserId },
       ],
+      deletedFor: { $ne: currentUserId } // Hide if deleted for me
     })
       .populate("sender", "name email")
       .populate("receiver", "name email")
@@ -295,6 +296,48 @@ router.get("/user-status/:userId", protect, async (req, res) => {
       name: user.name
     });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ================= DELETE MESSAGE =================
+router.delete("/messages/:id", protect, async (req, res) => {
+  try {
+    const { type } = req.query; // 'me' or 'everyone'
+    const message = await Message.findById(req.params.id);
+    if (!message) return res.status(404).json({ message: "Message not found" });
+
+    if (type === 'everyone') {
+      // Only sender can delete for everyone
+      if (message.sender.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "Only sender can delete for everyone" });
+      }
+      message.isDeletedForAll = true;
+      // Clear content for everyone (keep placeholder in UI)
+      message.text = "";
+      message.fileUrl = null;
+      message.fileName = null;
+      await message.save();
+
+      // Notify via socket (if possible here or handle in frontend socket emit)
+      const io = req.app.get("io");
+      if (io) {
+        const receiverId = message.receiver.toString();
+        const senderId = message.sender.toString();
+        io.to(`user_${receiverId}`).emit("messageDeleted", { messageId: message._id, type: 'everyone' });
+        io.to(`user_${senderId}`).emit("messageDeleted", { messageId: message._id, type: 'everyone' });
+      }
+    } else {
+      // Delete for me
+      if (!message.deletedFor.includes(req.user._id)) {
+        message.deletedFor.push(req.user._id);
+        await message.save();
+      }
+    }
+
+    res.json({ message: "Message deleted successfully", messageId: message._id, type });
+  } catch (error) {
+    console.error("DELETE message error:", error);
     res.status(500).json({ message: error.message });
   }
 });

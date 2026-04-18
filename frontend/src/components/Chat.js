@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import {
   getConversations, getMessages, sendMessage as sendMessageAPI,
-  uploadChatFile, getUserStatus, BASE_URL
+  uploadChatFile, getUserStatus, BASE_URL, deleteMessage as deleteMessageAPI
 } from "../api";
 import { playMessageSound, playSentSound } from "../utils/sounds";
 
@@ -131,11 +131,20 @@ const Chat = () => {
       }
     };
 
+    const handleMessageDeleted = ({ messageId, type }) => {
+      if (type === 'everyone') {
+        setMessages((prev) => prev.map(m => m._id === messageId ? { ...m, isDeletedForAll: true, text: "", fileUrl: null, fileName: null } : m));
+      } else {
+        setMessages((prev) => prev.filter(m => m._id !== messageId));
+      }
+    };
+
     socket.on("receiveMessage", handleReceiveMessage);
     socket.on("userTyping", handleTyping);
     socket.on("userStopTyping", handleStopTyping);
     socket.on("messageStatusUpdate", handleStatusUpdate);
     socket.on("allMessagesSeen", handleAllSeen);
+    socket.on("messageDeleted", handleMessageDeleted);
 
     return () => {
       socket.off("receiveMessage", handleReceiveMessage);
@@ -143,6 +152,7 @@ const Chat = () => {
       socket.off("userStopTyping", handleStopTyping);
       socket.off("messageStatusUpdate", handleStatusUpdate);
       socket.off("allMessagesSeen", handleAllSeen);
+      socket.off("messageDeleted", handleMessageDeleted);
     };
   }, [socket, activeChat, user]);
 
@@ -224,6 +234,22 @@ const Chat = () => {
     } finally {
       setUploadingFile(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const [activeMenu, setActiveMenu] = useState(null);
+
+  const handleDelete = async (msgId, type) => {
+    try {
+      await deleteMessageAPI(msgId, type);
+      if (type === 'everyone') {
+        setMessages(prev => prev.map(m => m._id === msgId ? { ...m, isDeletedForAll: true, text: "", fileUrl: null, fileName: null } : m));
+      } else {
+        setMessages(prev => prev.filter(m => m._id !== msgId));
+      }
+      setActiveMenu(null);
+    } catch (err) {
+      console.error("Delete error:", err);
     }
   };
 
@@ -365,18 +391,44 @@ const Chat = () => {
                       const isSent = (msg.sender?._id || msg.sender) === user?._id;
 
                       return (
-                        <div key={msg._id || i} className={`chat-message ${isSent ? "sent" : "received"} animate-msg`}>
+                        <div 
+                          key={msg._id || i} 
+                          className={`chat-message ${isSent ? "sent" : "received"} animate-msg ${msg.isDeletedForAll ? "deleted" : ""}`}
+                          onMouseLeave={() => setActiveMenu(null)}
+                        >
                           {!isSent && <div className="chat-message-sender">{msg.sender?.name || ""}</div>}
-                          {msg.fileUrl && (
-                            <div className="chat-file-attachment">
-                              {isImageFile(msg.fileUrl) ? (
-                                <img src={`${API_BASE}${msg.fileUrl}`} alt={msg.fileName || "Attachment"} className="chat-file-image" onClick={() => window.open(`${API_BASE}${msg.fileUrl}`, "_blank")} />
-                              ) : (
-                                <a href={`${API_BASE}${msg.fileUrl}`} target="_blank" rel="noopener noreferrer" className="chat-file-link">📎 {msg.fileName || "File"}</a>
+                          
+                          {msg.isDeletedForAll ? (
+                            <div className="message-deleted-text">🚫 This message was deleted</div>
+                          ) : (
+                            <>
+                              {activeMenu === msg._id && (
+                                <div className="msg-options-dropdown">
+                                  <button onClick={() => handleDelete(msg._id, 'me')}>Delete for me</button>
+                                  {isSent && (
+                                    <button onClick={() => handleDelete(msg._id, 'everyone')} className="delete-everyone">
+                                      Delete for everyone
+                                    </button>
+                                  )}
+                                </div>
                               )}
-                            </div>
+                              <button className="msg-options-trigger" onClick={() => setActiveMenu(activeMenu === msg._id ? null : msg._id)}>
+                                ▾
+                              </button>
+                              
+                              {msg.fileUrl && (
+                                <div className="chat-file-attachment">
+                                  {isImageFile(msg.fileUrl) ? (
+                                    <img src={`${API_BASE}${msg.fileUrl}`} alt={msg.fileName || "Attachment"} className="chat-file-image" onClick={() => window.open(`${API_BASE}${msg.fileUrl}`, "_blank")} />
+                                  ) : (
+                                    <a href={`${API_BASE}${msg.fileUrl}`} target="_blank" rel="noopener noreferrer" className="chat-file-link">📎 {msg.fileName || "File"}</a>
+                                  )}
+                                </div>
+                              )}
+                              {msg.text && <div>{msg.text}</div>}
+                            </>
                           )}
-                          {msg.text && <div>{msg.text}</div>}
+                          
                           <div className="chat-message-time">
                             {formatTime(msg.createdAt)}
                             {renderMessageStatus(msg)}

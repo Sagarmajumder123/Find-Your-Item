@@ -53,6 +53,12 @@ const foundItemSchema = new mongoose.Schema({
     default: Date.now
   },
   images: [{ type: String }],
+  securityQuestion: {
+    type: String,
+    trim: true,
+    maxlength: 500,
+    default: ""
+  },
   status: {
     type: String,
     enum: ['active', 'claimed', 'resolved'],

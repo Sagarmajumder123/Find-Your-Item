@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const LostItem = require("../models/LostItem");
 const FoundItem = require("../models/FoundItem");
+const Claim = require("../models/Claim");
+const Notification = require("../models/Notification");
 const { protect } = require("../middleware/auth");
 const { calculateMatchScore } = require("../utils/haversine");
 
@@ -176,55 +178,114 @@ router.get("/my", protect, async (req, res) => {
   }
 });
 
-// ================= CLAIM ITEM =================
+// ================= SUBMIT CLAIM REQUEST (With Security Answer) =================
 router.post("/claim", protect, async (req, res) => {
   try {
-    const { lostItemId, foundItemId } = req.body;
+    const { lostItemId, foundItemId, answer } = req.body;
     const userId = req.user._id;
 
-    if (!lostItemId || !foundItemId) {
-      return res.status(400).json({ message: "Both lostItemId and foundItemId are required" });
+    if (!lostItemId || !foundItemId || !answer) {
+      return res.status(400).json({ message: "LostItem, FoundItem, and Answer are required" });
     }
 
-    const lostItem = await LostItem.findById(lostItemId).populate("user", "name email");
-    const foundItem = await FoundItem.findById(foundItemId).populate("user", "name email");
+    const lostItem = await LostItem.findById(lostItemId);
+    const foundItem = await FoundItem.findById(foundItemId);
 
-    if (!lostItem || !foundItem) {
-      return res.status(404).json({ message: "Item not found" });
+    if (!lostItem || !foundItem) return res.status(404).json({ message: "Item not found" });
+
+    // Ensure the current user owns the lost item (they are the claimer)
+    if (lostItem.user.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "You can only claim items matching your own report" });
     }
 
-    // User must own one of the items
-    const ownsLost = lostItem.user._id.toString() === userId.toString();
-    const ownsFound = foundItem.user._id.toString() === userId.toString();
+    // Check if a pending claim already exists
+    const existing = await Claim.findOne({ claimer: userId, foundItem: foundItemId, status: 'pending' });
+    if (existing) return res.status(400).json({ message: "You already have a pending claim for this item" });
 
-    if (!ownsLost && !ownsFound) {
-      return res.status(403).json({ message: "You must own one of the matched items" });
-    }
-
-    // Mark both as claimed
-    lostItem.status = 'claimed';
-    lostItem.claimedBy = ownsLost ? foundItem.user._id : userId;
-    await lostItem.save();
-
-    foundItem.status = 'claimed';
-    foundItem.claimedBy = ownsFound ? lostItem.user._id : userId;
-    await foundItem.save();
-
-    // Create notification for the other user
-    const Notification = require("../models/Notification");
-    const otherUserId = ownsLost ? foundItem.user._id : lostItem.user._id;
-
-    await Notification.create({
-      user: otherUserId,
-      type: 'claim',
-      title: '🎉 Item Claimed!',
-      message: `Someone claimed a match for "${ownsLost ? lostItem.title : foundItem.title}". Please verify and confirm.`,
-      data: { lostItemId, foundItemId }
+    // Create the claim request
+    const claim = await Claim.create({
+      lostItem: lostItemId,
+      foundItem: foundItemId,
+      claimer: userId,
+      finder: foundItem.user,
+      answer: answer
     });
 
-    res.json({ message: "Items claimed successfully", lostItem, foundItem });
+    // Notify the finder
+    await Notification.create({
+      user: foundItem.user,
+      type: 'claim',
+      title: '📩 New Claim Request',
+      message: `Someone provided an answer for your found "${foundItem.title}". Review it now!`,
+      data: { claimId: claim._id, foundItemId }
+    });
+
+    res.status(201).json({ message: "Claim request submitted successfully", claim });
   } catch (error) {
-    console.error("CLAIM error:", error);
+    console.error("CLAIM request error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ================= VERIFY CLAIM (Finder Approves/Rejects) =================
+router.post("/verify-claim", protect, async (req, res) => {
+  try {
+    const { claimId, action, rejectionReason } = req.body;
+    const userId = req.user._id;
+
+    const claim = await Claim.findById(claimId).populate("lostItem foundItem");
+    if (!claim) return res.status(404).json({ message: "Claim not found" });
+
+    // Only the finder can verify
+    if (claim.finder.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Not authorized to verify this claim" });
+    }
+
+    if (action === 'approved') {
+      claim.status = 'approved';
+      
+      // Update item statuses to 'resolved'
+      await LostItem.findByIdAndUpdate(claim.lostItem._id, { status: 'resolved' });
+      await FoundItem.findByIdAndUpdate(claim.foundItem._id, { status: 'resolved' });
+
+      // Notify the owner
+      await Notification.create({
+        user: claim.claimer,
+        type: 'match',
+        title: '✅ Claim Approved!',
+        message: `Your claim for "${claim.foundItem.title}" was approved by the finder! You can now chat to arrange handover.`,
+        data: { foundItemId: claim.foundItem._id, status: 'approved' }
+      });
+    } else {
+      claim.status = 'rejected';
+      claim.rejectionReason = rejectionReason || '';
+      
+      // Notify the owner
+      await Notification.create({
+        user: claim.claimer,
+        type: 'system',
+        title: '❌ Claim Rejected',
+        message: `Your answer for "${claim.foundItem.title}" was rejected. Feel free to try again with more details.`,
+        data: { foundItemId: claim.foundItem._id, status: 'rejected' }
+      });
+    }
+
+    await claim.save();
+    res.json({ message: `Claim ${action} successfully`, claim });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ================= GET PENDING CLAIMS (For Finder) =================
+router.get("/claims/received", protect, async (req, res) => {
+  try {
+    const claims = await Claim.find({ finder: req.user._id, status: 'pending' })
+      .populate("claimer", "name email")
+      .populate("lostItem")
+      .populate("foundItem");
+    res.json(claims);
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });

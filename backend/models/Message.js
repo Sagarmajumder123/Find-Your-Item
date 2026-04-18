@@ -33,6 +33,14 @@ const messageSchema = new mongoose.Schema({
   read: {
     type: Boolean,
     default: false
+  },
+  deletedFor: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  isDeletedForAll: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

@@ -4483,3 +4483,208 @@ img {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.15); }
 }
+
+/* ============================================
+   CHAT MESSAGE DELETION STYLES
+============================================ */
+.chat-message {
+  position: relative;
+}
+
+.msg-options-trigger {
+  position: absolute;
+  top: 4px;
+  right: -20px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+  padding: 0 5px;
+  z-index: 5;
+}
+
+.chat-message:hover .msg-options-trigger {
+  opacity: 1;
+}
+
+.chat-message.received .msg-options-trigger {
+  right: auto;
+  left: -20px;
+}
+
+.msg-options-dropdown {
+  position: absolute;
+  top: 25px;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  min-width: 150px;
+  overflow: hidden;
+  animation: fadeIn 0.1s ease-out;
+}
+
+.msg-options-dropdown button {
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.msg-options-dropdown button:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.msg-options-dropdown button.delete-everyone {
+  color: #ff4d4d;
+  border-top: 1px solid var(--border-color);
+}
+
+.message-deleted-text {
+  font-style: italic;
+  color: var(--text-muted);
+  opacity: 0.7;
+  font-size: 0.9rem;
+  padding: 4px 0;
+}
+
+.chat-message.deleted {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px dashed var(--border-color);
+}
+
+/* ============================================
+   CLAIM VERIFICATION UI
+============================================ */
+.matches-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.3s;
+}
+
+.tab-btn.active {
+  color: var(--primary-light);
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary-light);
+}
+
+.tab-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 0.5rem;
+}
+
+.claims-list {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+}
+
+@media (max-width: 600px) {
+  .claims-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.claim-item {
+  padding: 1.5rem;
+}
+
+.claim-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.claim-user {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.claim-verification-box {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.claim-verification-box label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary-light);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.claim-question {
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.claim-answer {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--primary-light);
+}
+
+.claim-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.claim-question-display {
+  background: rgba(108, 99, 255, 0.1);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--primary-light);
+}
+
+.claim-question-display label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary-light);
+  display: block;
+  margin-bottom: 0.3rem;
+}

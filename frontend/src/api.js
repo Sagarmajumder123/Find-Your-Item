@@ -59,12 +59,14 @@ export const uploadChatFile = (formData) =>
   });
 export const updateMessageStatus = (id, status) =>
   API.put(`/chat/messages/${id}/status`, { status });
+export const deleteMessage = (id, type) => API.delete(`/chat/messages/${id}`, { params: { type } });
 export const getUserStatus = (userId) => API.get(`/chat/user-status/${userId}`);
 
-// ===================== MATCHES =====================
 export const getMatches = (params) => API.get("/matches", { params });
 export const getMyMatches = (params) => API.get("/matches/my", { params });
-export const claimMatch = (data) => API.post("/matches/claim", data);
+export const submitClaim = (data) => API.post("/matches/claim", data);
+export const verifyClaim = (data) => API.post("/matches/verify-claim", data);
+export const getReceivedClaims = () => API.get("/matches/claims/received");
 export const resolveMatch = (data) => API.post("/matches/resolve", data);
 
 // ===================== NOTIFICATIONS =====================

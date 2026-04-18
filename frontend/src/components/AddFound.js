@@ -14,6 +14,7 @@ const AddFound = () => {
     description: "",
     date: "",
     brand: "",
+    securityQuestion: "",
   });
   const [category, setCategory] = useState("");
   const [color, setColor] = useState("");
@@ -154,6 +155,7 @@ const AddFound = () => {
       data.append("longitude", locationData.lng);
       data.append("locationName", locationData.locationName);
       if (formData.date) data.append("date", formData.date);
+      if (formData.securityQuestion) data.append("securityQuestion", formData.securityQuestion);
       images.forEach(img => data.append("images", img));
 
       await createFoundItem(data);
@@ -235,6 +237,28 @@ const AddFound = () => {
               )}
             </div>
           </div>
+
+          <div className="form-section glass-card" style={{ marginBottom: "2rem", padding: "1.5rem", borderRadius: "1.5rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <h3 style={{ marginBottom: "1.2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              🛡️ Security Verification
+            </h3>
+            <div className="form-group">
+              <label>Security Question (Optional)</label>
+              <input
+                type="text"
+                name="securityQuestion"
+                className="form-input"
+                placeholder="Ask something only the owner would know (e.g. 'What is the sticker on the back?')"
+                value={formData.securityQuestion}
+                onChange={handleChange}
+                maxLength={500}
+              />
+              <p className="form-help-text" style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>
+                This helps verify the rightful owner before they can claim the item.
+              </p>
+            </div>
+          </div>
+
 
           <div className="form-footer">
             <button type="submit" className="btn btn-success btn-lg" disabled={loading || !isValid} style={{ flex: 1 }}>
