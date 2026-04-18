@@ -197,7 +197,7 @@ const Dashboard = () => {
           <p>📧 {user?.email || "No email"}</p>
         </div>
         <button onClick={handleLogout} className="btn btn-danger btn-sm">
-          🚪 Logout
+          Logout
         </button>
       </div>
 

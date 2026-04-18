@@ -12,11 +12,11 @@ const path = require("path");
 const CATEGORIES = FoundItem.CATEGORIES;
 const COLORS = FoundItem.COLORS;
 
-// ================= GET ALL FOUND ITEMS =================
-router.get("/", async (req, res) => {
+// ================= GET ALL FOUND ITEMS (Restricted to User) =================
+router.get("/", protect, async (req, res) => {
   try {
     const { search, location, dateFrom, dateTo, category, color, status } = req.query;
-    let query = {};
+    const query = { user: req.user._id };
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: "i" } },

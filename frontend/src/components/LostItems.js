@@ -51,8 +51,8 @@ const LostItems = () => {
   return (
     <div className="page-container">
       <div className="section-header">
-        <div>
-          <h1 className="section-title">📦 Lost Items</h1>
+        <div className="animate-fade">
+          <h1 className="section-title">📦 My Lost Items</h1>
           <p className="section-subtitle">
             {items.length} item{items.length !== 1 ? "s" : ""} reported lost
           </p>
@@ -111,7 +111,7 @@ const LostItems = () => {
           </Link>
         </div>
       ) : (
-        <div className="items-grid">
+        <div className="items-grid animate-slide-up">
           {items.map((item) => {
             const catInfo = getCategoryInfo(item.category);
             return (

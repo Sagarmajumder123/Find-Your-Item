@@ -11,6 +11,19 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [theme, setTheme] = useState(
+    localStorage.getItem("theme") || "dark"
+  );
+
+  // Theme support
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -67,8 +80,16 @@ const Navbar = () => {
               
               <div className="nav-profile">
                 <NotificationBell />
+                {/* Theme Toggle Button */}
+                <button 
+                  className="theme-toggle" 
+                  onClick={toggleTheme}
+                  title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+                >
+                  {theme === "dark" ? "☀️" : "🌙"}
+                </button>
                 <div className="user-avatar" title={user.name}>{getInitial(user.name)}</div>
-                <button onClick={handleLogout} className="btn-logout" title="Logout">🚪</button>
+                <button onClick={handleLogout} className="nav-logout-text" title="Logout">Logout</button>
               </div>
             </>
           ) : (

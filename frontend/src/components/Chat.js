@@ -286,7 +286,7 @@ const Chat = () => {
 
   return (
     <div className="page-container">
-      <div className="chat-container">
+      <div className={`chat-container ${activeChat ? 'has-active-chat' : ''}`}>
         {/* Sidebar */}
         <div className={`chat-sidebar ${!activeChat ? "show" : ""}`}>
           <div className="chat-sidebar-header">💬 Messages</div>

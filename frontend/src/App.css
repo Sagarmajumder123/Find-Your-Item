@@ -74,22 +74,53 @@
    LIGHT MODE OVERRIDE
 ============================================ */
 [data-theme="light"] {
-  --bg-primary: #F7F8FC;
-  --bg-secondary: #FFFFFF;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #F0F2FF;
-  --bg-input: #F7F8FC;
-  --bg-glass: rgba(255, 255, 255, 0.8);
-  --text-primary: #1A202C;
-  --text-secondary: #4A5568;
-  --text-muted: #A0AEC0;
+  --primary: #0ea5e9;
+  --primary-dark: #0284c7;
+  --primary-light: #38bdf8;
+  --secondary: #64748b;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-input: #f8fafc;
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
   --border-color: rgba(0, 0, 0, 0.08);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.06);
-  --gradient-hero: linear-gradient(135deg, #F7F8FC 0%, #EEF0FF 50%, #E8ECFF 100%);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  --gradient-hero: radial-gradient(circle at 100% 0%, #f1f5f9 0%, #f8fafc 100%);
 }
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-soft {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.animate-fade { animation: fadeIn 0.4s ease-out forwards; }
+.animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-scale { animation: scaleIn 0.3s ease-out forwards; }
+.animate-pulse { animation: pulse-soft 2s infinite ease-in-out; }
+
 
 /* ============================================
    GLOBAL RESET & BASE
@@ -196,7 +227,7 @@ img {
 .brand-text {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-primary);
   letter-spacing: -0.5px;
 }
 
@@ -250,17 +281,40 @@ img {
   border-left: 1px solid var(--border-color);
 }
 
-.btn-logout {
+.theme-toggle {
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border-color);
+  font-size: 1.1rem;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.theme-toggle:hover {
+  transform: rotate(15deg);
+  background: var(--primary-glow);
+  border-color: var(--primary);
+}
+
+.nav-logout-text {
   background: none;
   border: none;
-  font-size: 1.1rem;
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
   transition: var(--transition-fast);
 }
 
-.btn-logout:hover {
+.nav-logout-text:hover {
   background: rgba(239, 68, 68, 0.1);
 }
 
@@ -276,7 +330,7 @@ img {
   display: block;
   width: 24px;
   height: 2px;
-  background: #fff;
+  background: var(--text-primary);
   margin-bottom: 5px;
   transition: var(--transition-base);
 }
@@ -1311,18 +1365,42 @@ img {
 @media (max-width: 768px) {
   .chat-container {
     grid-template-columns: 1fr;
-    height: calc(100vh - 120px);
+    height: calc(100vh - 80px); /* Adjust for mobile navbar */
+    border-radius: 0;
+    margin: -2rem -1.5rem; /* Full width mobile */
+    border: none;
   }
 
   .chat-sidebar {
-    display: none;
-  }
-
-  .chat-sidebar.show {
-    display: block;
+    display: flex;
     position: absolute;
     inset: 0;
     z-index: 10;
+    background: var(--bg-card);
+    transition: transform 0.3s ease;
+  }
+
+  /* Hide sidebar when chat is active */
+  .chat-container.has-active-chat .chat-sidebar {
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+
+  .chat-main {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    background: var(--bg-card);
+    transition: transform 0.3s ease;
+    transform: translateX(100%);
+  }
+
+  .chat-container.has-active-chat .chat-main {
+    transform: translateX(0);
+  }
+
+  .chat-main-header .back-btn {
+    display: flex !important;
   }
 }
 
