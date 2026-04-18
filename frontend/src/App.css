@@ -304,7 +304,6 @@ img {
     margin-top: 20px;
   }
 }
-}
 
 /* Chat notification badge */
 .nav-link .badge {
@@ -450,7 +449,6 @@ img {
 @media (max-width: 768px) {
   .hero-section { height: auto; padding: 140px 20px 80px; }
   .hero-actions { flex-direction: column; width: 100%; max-width: 320px; margin: 0 auto; }
-}
 }
 
 .search-icon {
