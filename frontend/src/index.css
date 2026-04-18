@@ -135,6 +135,12 @@ a:hover {
   min-height: 90vh;
 }
 
+@media (max-width: 768px) {
+  .page-container {
+    padding: 60px 16px 20px;
+  }
+}
+
 .section-header {
   margin-bottom: 40px;
   text-align: left;

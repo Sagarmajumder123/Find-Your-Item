@@ -100,6 +100,11 @@ const Navbar = () => {
           )}
         </nav>
 
+        {/* Mobile Overlay */}
+        {menuOpen && (
+          <div className="navbar-overlay" onClick={() => setMenuOpen(false)}></div>
+        )}
+
         {/* Mobile Toggle */}
         <button className="navbar-toggle" onClick={() => setMenuOpen(!menuOpen)}>
           <div className={`hamburger ${menuOpen ? "active" : ""}`}>
