@@ -238,6 +238,29 @@ const Chat = () => {
   };
 
   const [activeMenu, setActiveMenu] = useState(null);
+  const [pressingMsgId, setPressingMsgId] = useState(null);
+  const longPressTimer = useRef(null);
+
+  const handlePressStart = (msgId) => {
+    // Prevent menu for already deleted messages
+    const msg = messages.find(m => m._id === msgId);
+    if (msg?.isDeletedForAll) return;
+
+    setPressingMsgId(msgId);
+    longPressTimer.current = setTimeout(() => {
+      // Haptic feedback
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+      setActiveMenu(msgId);
+      setPressingMsgId(null);
+    }, 600); // 600ms for long press
+  };
+
+  const handlePressEnd = () => {
+    clearTimeout(longPressTimer.current);
+    setPressingMsgId(null);
+  };
 
   const handleDelete = async (msgId, type) => {
     try {
@@ -393,8 +416,15 @@ const Chat = () => {
                       return (
                         <div 
                           key={msg._id || i} 
-                          className={`chat-message ${isSent ? "sent" : "received"} animate-msg ${msg.isDeletedForAll ? "deleted" : ""}`}
-                          onMouseLeave={() => setActiveMenu(null)}
+                          className={`chat-message ${isSent ? "sent" : "received"} animate-msg ${msg.isDeletedForAll ? "deleted" : ""} ${pressingMsgId === msg._id ? "long-pressing" : ""}`}
+                          onPointerDown={() => handlePressStart(msg._id)}
+                          onPointerUp={handlePressEnd}
+                          onPointerLeave={handlePressEnd}
+                          onPointerMove={handlePressEnd}
+                          // Prevent default browser context menu on long-press (mobile)
+                          onContextMenu={(e) => {
+                            if (activeMenu === msg._id || pressingMsgId === msg._id) e.preventDefault();
+                          }}
                         >
                           {!isSent && <div className="chat-message-sender">{msg.sender?.name || ""}</div>}
                           
@@ -402,19 +432,21 @@ const Chat = () => {
                             <div className="message-deleted-text">🚫 This message was deleted</div>
                           ) : (
                             <>
-                              {activeMenu === msg._id && (
-                                <div className="msg-options-dropdown">
-                                  <button onClick={() => handleDelete(msg._id, 'me')}>Delete for me</button>
+                              {activeMenu === msg._id && !msg.isDeletedForAll && (
+                                <div className="msg-options-dropdown" onMouseLeave={() => setActiveMenu(null)}>
+                                  <button onClick={(e) => { e.stopPropagation(); handleDelete(msg._id, 'me'); }}>
+                                    🗑️ Delete for me
+                                  </button>
                                   {isSent && (
-                                    <button onClick={() => handleDelete(msg._id, 'everyone')} className="delete-everyone">
-                                      Delete for everyone
+                                    <button onClick={(e) => { e.stopPropagation(); handleDelete(msg._id, 'everyone'); }} className="delete-everyone">
+                                      🚮 Delete for everyone
                                     </button>
                                   )}
+                                  <button onClick={(e) => { e.stopPropagation(); setActiveMenu(null); }} style={{ opacity: 0.6, fontSize: '0.8rem' }}>
+                                    Cancel
+                                  </button>
                                 </div>
                               )}
-                              <button className="msg-options-trigger" onClick={() => setActiveMenu(activeMenu === msg._id ? null : msg._id)}>
-                                ▾
-                              </button>
                               
                               {msg.fileUrl && (
                                 <div className="chat-file-attachment">
