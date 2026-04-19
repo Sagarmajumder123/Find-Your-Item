@@ -319,6 +319,38 @@ img {
   border-color: var(--primary);
 }
 
+.nav-login-link {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: var(--transition-fast);
+  text-decoration: none;
+}
+
+.nav-login-link:hover {
+  color: var(--accent);
+}
+
+.nav-register-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  background-color: transparent;
+  border: 1.5px solid var(--accent);
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.nav-register-btn:hover {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
 .nav-logout-text {
   background: none;
   border: none;

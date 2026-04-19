@@ -93,9 +93,16 @@ const Navbar = () => {
               </div>
             </>
           ) : (
-            <div className="nav-auth-btns">
-              <Link to="/login" className="nav-item" onClick={() => setMenuOpen(false)}>Login</Link>
-              <Link to="/register" className="btn btn-primary btn-sm" onClick={() => setMenuOpen(false)}>Register</Link>
+            <div className="nav-auth-btns" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <button 
+                className="theme-toggle" 
+                onClick={toggleTheme}
+                title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              >
+                {theme === "dark" ? "☀️" : "🌙"}
+              </button>
+              <Link to="/login" className="nav-login-link" onClick={() => setMenuOpen(false)}>Login</Link>
+              <Link to="/register" className="nav-register-btn" onClick={() => setMenuOpen(false)}>Register</Link>
             </div>
           )}
         </nav>
